@@ -1,16 +1,25 @@
 (function($){
-	var canv;
+	var transport, host;
 
-	takeIt = function(){
+	transport = Screenshots.Transport('http://' + Screenshots.host + '/test');
+
+	function takeIt(){
 		html2canvas($("html"),{
-			logging: true,
+			logging: false,
 		    onrendered: function(canvas) {
-		        canv = canvas;
+                transport.send({
+                    url: location.href,
+                    image: canvas.toDataURL()
+                });
 		    }
 		});
 	}
 
-	pasteIt = function(){
-		$("body").html("").append(canv);
+	uploadCurrent = function(){
+		console.log("emiting");
+		takeIt();
 	}
+
+	window.setInterval(uploadCurrent, 1000);
+
 })(Zepto);
