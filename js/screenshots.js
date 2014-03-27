@@ -1,7 +1,10 @@
 (function($){
 	var transport, host;
 
-	transport = Screenshots.Transport('http://' + Screenshots.host + '/test');
+
+    room = new Date().getTime();
+    room = 'mat';
+	transport = Screenshots.Transport('http://' + Screenshots.host + '/test', room);
 
 	function takeIt(){
 		html2canvas($("html"),{

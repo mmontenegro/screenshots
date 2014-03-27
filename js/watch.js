@@ -1,10 +1,16 @@
 (function($){
     var transport;
 
-    transport = Screenshots.Transport('http://' + Screenshots.host + '/test');
+    room = 'mat';
+    transport = Screenshots.Transport('http://' + Screenshots.host + '/test', room);
 
-    initialize = function(){
+    initializeWatch = function(){
         transport.onWatch(updateScreen);
+    }
+
+    initializeRooms = function(){
+        var rooms = transport.getRooms();
+        console.log(rooms);
     }
 
     updateScreen = function(image){
@@ -13,5 +19,5 @@
         $('#watch input#url').val(image['data']['url']);
     }
 
-    initialize();
+    
 })(Zepto);

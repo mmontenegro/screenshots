@@ -1,12 +1,12 @@
 (function($){
-    Screenshots.Transport = function(url){
+    Screenshots.Transport = function(url, room){
         var socket, onWatchFunction;
         
         function initialize(){
             socket = io.connect(url);
 
             socket.on('connect', function(msg) {
-                console.log("connected");
+                 socket.emit('join room', {room: room});
                  socket.on('disconnect', function(msg) {
                     console.log("desconnected");
                 });
@@ -19,11 +19,15 @@
             });
         }
 
+        function getRooms(){
+        }
+
         function onWatch(fnc){
             onWatchFunction = fnc;
         }
 
         function send(capture_info){
+            capture_info['room'] = room;
             socket.emit('send_image', capture_info);
         }
 
@@ -32,6 +36,7 @@
             socket: socket,
             send: send,
             onWatch: onWatch,
+            getRooms: getRooms
         }
     }
 })(Zepto);

@@ -1,4 +1,3 @@
 var Screenshots = {
-    host: window.host || 'localhost:5000'
-
+    host: window.host || 'screenshots:5000'
 };

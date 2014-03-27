@@ -8425,17 +8425,16 @@ _html2canvas.Renderer.Canvas = function(options) {
   };
 };
 })(window,document);;var Screenshots = {
-    host: window.host || 'localhost:5000'
-
+    host: window.host || 'screenshots:5000'
 };;(function($){
-    Screenshots.Transport = function(url){
+    Screenshots.Transport = function(url, room){
         var socket, onWatchFunction;
         
         function initialize(){
             socket = io.connect(url);
 
             socket.on('connect', function(msg) {
-                console.log("connected");
+                 socket.emit('join room', {room: room});
                  socket.on('disconnect', function(msg) {
                     console.log("desconnected");
                 });
@@ -8448,11 +8447,16 @@ _html2canvas.Renderer.Canvas = function(options) {
             });
         }
 
+        function getRooms(){
+            return "uto";
+        }
+
         function onWatch(fnc){
             onWatchFunction = fnc;
         }
 
         function send(capture_info){
+            capture_info['room'] = room;
             socket.emit('send_image', capture_info);
         }
 
@@ -8461,12 +8465,16 @@ _html2canvas.Renderer.Canvas = function(options) {
             socket: socket,
             send: send,
             onWatch: onWatch,
+            getRooms: getRooms
         }
     }
 })(Zepto);;(function($){
 	var transport, host;
 
-	transport = Screenshots.Transport('http://' + Screenshots.host + '/test');
+
+    room = new Date().getTime();
+    room = 'mat';
+	transport = Screenshots.Transport('http://' + Screenshots.host + '/test', room);
 
 	function takeIt(){
 		html2canvas($("html"),{
