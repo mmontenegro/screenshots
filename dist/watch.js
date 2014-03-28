@@ -8425,7 +8425,8 @@ _html2canvas.Renderer.Canvas = function(options) {
   };
 };
 })(window,document);;var Screenshots = {
-    host: window.host || 'screenshots:5000'
+    host: window.host || 'screenshots:5000',
+    proxyURL: 'http://screenshots:5000/proxy',
 };;(function($){
     Screenshots.Transport = function(url, room){
         var socket, onWatchFunction;
@@ -8434,21 +8435,24 @@ _html2canvas.Renderer.Canvas = function(options) {
             socket = io.connect(url);
 
             socket.on('connect', function(msg) {
-                 socket.emit('join room', {room: room});
+                if(room)
+                     socket.emit('join', {room: room});
                  socket.on('disconnect', function(msg) {
                     console.log("desconnected");
                 });
             });
 
             socket.on('emit', function(msg) {
-                if(onWatchFunction){
+                if(undefined !== onWatchFunction){
                     onWatchFunction(msg);
                 }
             });
         }
 
-        function getRooms(){
-            return "uto";
+        function getRooms(fnc){
+            $.get('/rooms', function(response){
+                fnc(response);
+            });
         }
 
         function onWatch(fnc){
@@ -8471,16 +8475,24 @@ _html2canvas.Renderer.Canvas = function(options) {
 })(Zepto);;(function($){
     var transport;
 
-    room = 'mat';
-    transport = Screenshots.Transport('http://' + Screenshots.host + '/test', room);
-
-    initializeWatch = function(){
-        transport.onWatch(updateScreen);
-    }
 
     initializeRooms = function(){
-        var rooms = transport.getRooms();
-        console.log(rooms);
+        transport = Screenshots.Transport('http://' + Screenshots.host + '/test');
+        transport.getRooms(function(response){
+            eval('var rooms = ' + response +';');
+            for (var i = 0; i < rooms.length; i++) {
+                var a = $('<a href="#" target="_blank">').html(rooms[i]).prop('href', '/watch#' + rooms[i]);
+                $('#rooms').append(a);
+            };
+            
+        });
+    }
+
+    initializeWatch = function(){
+        var url = location.href,
+        room = url.substring(url.indexOf("#")+1);
+        transport = Screenshots.Transport('http://' + Screenshots.host + '/test', room);
+        transport.onWatch(updateScreen);
     }
 
     updateScreen = function(image){

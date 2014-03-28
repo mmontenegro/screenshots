@@ -8425,7 +8425,8 @@ _html2canvas.Renderer.Canvas = function(options) {
   };
 };
 })(window,document);;var Screenshots = {
-    host: window.host || 'screenshots:5000'
+    host: window.host || 'screenshots:5000',
+    proxyURL: 'http://screenshots:5000/proxy',
 };;(function($){
     Screenshots.Transport = function(url, room){
         var socket, onWatchFunction;
@@ -8434,21 +8435,24 @@ _html2canvas.Renderer.Canvas = function(options) {
             socket = io.connect(url);
 
             socket.on('connect', function(msg) {
-                 socket.emit('join room', {room: room});
+                if(room)
+                     socket.emit('join', {room: room});
                  socket.on('disconnect', function(msg) {
                     console.log("desconnected");
                 });
             });
 
             socket.on('emit', function(msg) {
-                if(onWatchFunction){
+                if(undefined !== onWatchFunction){
                     onWatchFunction(msg);
                 }
             });
         }
 
-        function getRooms(){
-            return "uto";
+        function getRooms(fnc){
+            $.get('/rooms', function(response){
+                fnc(response);
+            });
         }
 
         function onWatch(fnc){
@@ -8469,15 +8473,37 @@ _html2canvas.Renderer.Canvas = function(options) {
         }
     }
 })(Zepto);;(function($){
-	var transport, host;
+	var transport, host, room;
 
+	if(localStorage.getItem('screenshots_room')){
+		room = localStorage.getItem('screenshots_room');
+	}else{
+		var room = new Date().getTime();
+		alert(room);
+		localStorage.setItem('screenshots_room', room);
 
-    room = new Date().getTime();
-    room = 'mat';
+	}
+	alert(room);
+    
 	transport = Screenshots.Transport('http://' + Screenshots.host + '/test', room);
 
-	function takeIt(){
+/*
+	html2canvas.Preload($("html"), {
+		"complete" : function(images) {
+				var queue = html2canvas.Parse(el, images);
+				var canvas = html2canvas.Renderer(queue);
+				var img = canvas.toDataURL('image/png;base64');
+
+				img = img.replace('data:image/png;base64,', '');
+				processImg(img);
+			},
+			"proxy": Screenshots.proxyURL,
+			"logging" : true
+	});*/
+
+	function capture(){
 		html2canvas($("html"),{
+			"proxy": Screenshots.proxyURL,
 			logging: false,
 		    onrendered: function(canvas) {
                 transport.send({
@@ -8490,7 +8516,7 @@ _html2canvas.Renderer.Canvas = function(options) {
 
 	uploadCurrent = function(){
 		console.log("emiting");
-		takeIt();
+		capture();
 	}
 
 	window.setInterval(uploadCurrent, 1000);

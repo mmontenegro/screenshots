@@ -1,13 +1,11 @@
-from flask import Flask
+from flask import Flask, request, Response
 from flask.ext.socketio import SocketIO, emit, join_room, leave_room
-import json
-import os
+import json, urllib2, os, base64
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 
-app.rooms = []
 
 @app.route("/emit")
 def emit_page():
@@ -32,7 +30,7 @@ def watch_page():
 
 @app.route("/rooms")
 def rooms():
-    return json.dumps(app.rooms)
+    return json.dumps([room for room in socketio.rooms['/test']])
 
 
 @app.route('/<path:path>')
@@ -42,6 +40,19 @@ def static_proxy(path):
     '''
     return open(path).read()
 
+@app.route('/proxy')
+def images_proxy():
+    '''
+    static files
+    '''
+    url = request.args.get('url')
+    result = urllib2.urlopen(url)
+    info = result.info()
+    callback = request.args.get('callback')
+
+    callback += '(' +json.dumps("data:" + info['content-type'] + ";base64," + base64.b64encode( result.read()) )+ ');'
+    return callback
+
 
 @socketio.on('send_image', namespace='/test')
 def send_image(capture_info):
@@ -49,26 +60,28 @@ def send_image(capture_info):
     Receives an image and broadcast it to the "watch" method
     '''
     room = capture_info['room']
-    emit('emit', {'data': capture_info}, broadcast=True, room=room)
+    emit('emit', {'data': capture_info}, room=room)
 
 @socketio.on('connect', namespace='/test')
 def test_connect():
+    print('connected')
     emit('my response', {'data': 'Connected'})
 
 @socketio.on('disconnect', namespace='/test')
 def test_disconnect():
     print('Client disconnected')
 
-@socketio.on('join')
+@socketio.on('join', namespace='/test')
 def on_join(data):
     room = data['room']
-    rooms.append(room)
-    send(username + ' has entered the room.', room=room)
+    join_room(room)
+    print('Has entered the room: ' + room)
 
-@socketio.on('leave')
+@socketio.on('leave', namespace='/test')
 def on_leave(data):
     room = data['room']
-    send(username + ' has left the room.', room=room)
+    leave_room(room)
+    print('Has left the room: '+room)
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0')

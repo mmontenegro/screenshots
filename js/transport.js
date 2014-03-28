@@ -6,20 +6,24 @@
             socket = io.connect(url);
 
             socket.on('connect', function(msg) {
-                 socket.emit('join room', {room: room});
+                if(room)
+                     socket.emit('join', {room: room});
                  socket.on('disconnect', function(msg) {
                     console.log("desconnected");
                 });
             });
 
             socket.on('emit', function(msg) {
-                if(onWatchFunction){
+                if(undefined !== onWatchFunction){
                     onWatchFunction(msg);
                 }
             });
         }
 
-        function getRooms(){
+        function getRooms(fnc){
+            $.get('/rooms', function(response){
+                fnc(response);
+            });
         }
 
         function onWatch(fnc){

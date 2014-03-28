@@ -1,16 +1,24 @@
 (function($){
     var transport;
 
-    room = 'mat';
-    transport = Screenshots.Transport('http://' + Screenshots.host + '/test', room);
-
-    initializeWatch = function(){
-        transport.onWatch(updateScreen);
-    }
 
     initializeRooms = function(){
-        var rooms = transport.getRooms();
-        console.log(rooms);
+        transport = Screenshots.Transport('http://' + Screenshots.host + '/test');
+        transport.getRooms(function(response){
+            eval('var rooms = ' + response +';');
+            for (var i = 0; i < rooms.length; i++) {
+                var a = $('<a href="#" target="_blank">').html(rooms[i]).prop('href', '/watch#' + rooms[i]);
+                $('#rooms').append(a);
+            };
+            
+        });
+    }
+
+    initializeWatch = function(){
+        var url = location.href,
+        room = url.substring(url.indexOf("#")+1);
+        transport = Screenshots.Transport('http://' + Screenshots.host + '/test', room);
+        transport.onWatch(updateScreen);
     }
 
     updateScreen = function(image){
